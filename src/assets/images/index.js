@@ -13,3 +13,7 @@ export const gamka1 = require('./activities/gamka/gamka-1.jpg');
 export const gamka2 = require('./activities/gamka/gamka-2.jpg');
 
 {/* cycling */}
+
+
+{/* hike */}
+export const hike1 = require('./activities/hike/hike1.jpg');

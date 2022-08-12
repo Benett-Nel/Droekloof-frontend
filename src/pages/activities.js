@@ -1,7 +1,7 @@
 // import Component from the react module
 import React, { Component } from "react";
 import Slideshow from "../components/carousel";
-import { ParallaxLayer } from "@react-spring/parallax";
+import { Parallax, ParallaxLayer } from "@react-spring/parallax";
 import { activities } from "../assets/data/activities";
 
 function Activity(props) {
@@ -56,17 +56,21 @@ class Activities extends Component {
         }
 
         return (
-            <ParallaxLayer
-                offset={0.15}
-                factor={3.8}
-                className='z-0'
-                >
-                {/* Loop through activities[{}] and diplay an info and image block for each activity object*/}
-                {activities.map((activity, index) =>
-                    <Activity key={index} side={index+1} activity={activity}/>
-                )}
-                <hr className="w-screen border-gray-400"/>
-            </ParallaxLayer>
+            <Parallax pages={4}
+                className='snap-proximity snap-y overflow-y-scroll bg-green-50'
+            >
+                <ParallaxLayer
+                    offset={0.15}
+                    factor={3.8}
+                    className='z-0'
+                    >
+                    {/* Loop through activities[{}] and diplay an info and image block for each activity object*/}
+                    {activities.map((activity, index) =>
+                        <Activity key={index} side={index+1} activity={activity}/>
+                    )}
+                    <hr className="w-screen border-gray-400"/>
+                </ParallaxLayer>
+            </Parallax>
         )
     };
 };

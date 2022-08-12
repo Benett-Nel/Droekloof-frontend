@@ -3,24 +3,18 @@ import React, { Component } from "react";
 import Slideshow from "../components/carousel";
 import Stay from "../components/stay";
 import { info_swartskaap, images_swartskaap } from "../assets/data/swartskaap";
-import { ParallaxLayer } from "@react-spring/parallax";
+import { Parallax, ParallaxLayer } from "@react-spring/parallax";
 import Reviews from "../components/reviews";
 
 
 class Home extends Component {
 
 	render() {
-       window.onload = function() {
-            /* render heading and title div for introduction to stays when home page renders */
-            document.getElementById('title_div').innerHTML = 'Stays';
-            document.getElementById('title_div').className = 'backdrop-blur-sm w-screen p-5 h-12 text-center text-3xl inline-block text-black font-semibold';
-            /* Set style classes to ensure background blur is switched off when home page is rendered */
-            document.getElementById('navbar').className = 'h-16 z-20 flex items-center justify-between flex-wrap bg-inherit p-6';
-       }
-
         return (
 
-        <>
+        <Parallax pages={4}
+            className='snap-proximity snap-y overflow-y-scroll bg-green-50'
+        >
             <ParallaxLayer
                 offset={0}
                 factor={1}
@@ -34,25 +28,36 @@ class Home extends Component {
             
                     
             <ParallaxLayer
-                offset={1.15}
+                offset={1}
                 factor={1.8}
-                className='z-0'
+                sticky={{start: 1, end: 1}}
+                className='z-20 snap-start'
                 >
+                <div className="h-1/6"></div>
                 {/* swartskaap */}
-                <Stay info={info_swartskaap} title={images_swartskaap.title} photos={images_swartskaap.photos} side="left"/>
+                <Stay info={info_swartskaap.info_list} title={images_swartskaap.title} photos={images_swartskaap.photos} side="left"/>
 
                 {/* swartskaap */}
-                <Stay info={info_swartskaap} title={images_swartskaap.title} photos={images_swartskaap.photos} side="right"/>
+                <Stay info={info_swartskaap.info_list} title={images_swartskaap.title} photos={images_swartskaap.photos} side="right"/>
 
                 {/* swartskaap */}
-                <Stay info={info_swartskaap} title={images_swartskaap.title} photos={images_swartskaap.photos} side="left"/>
+                <Stay info={info_swartskaap.info_list} title={images_swartskaap.title} photos={images_swartskaap.photos} side="left"/>
 
                 <Reviews />
 
             </ParallaxLayer>
                     
-
-        </>   
+            <ParallaxLayer
+                offset={1.01}
+                factor={0.1}
+                className="z-0"
+            >
+                <div className="backdrop-blur-sm w-screen p-5 h-12 text-center text-3xl inline-block text-black font-semibold"
+                    id="title_div"
+                >
+                </div>
+            </ParallaxLayer>
+        </Parallax>   
         )
     }
 }

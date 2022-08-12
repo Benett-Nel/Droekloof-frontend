@@ -10,49 +10,30 @@ import StaySelect from "./pages/bookings";
 import DateSelect from './pages/bookdate';
 import { Route, BrowserRouter, Routes } from 'react-router-dom';
 import { Parallax, ParallaxLayer } from '@react-spring/parallax';
+import { images_swartskaap, info_swartskaap } from "./assets/data/swartskaap";
 
 class App extends Component {
 
 	render() {
 		return(
-			<BrowserRouter>
-				<Parallax pages={4}
-					className='lg:snap-proximity lg:snap-y overflow-y-scroll bg-green-50'
+
+			<div className="w-screen h-screen inline-flex">
+				<div 
+					className="lg:backdrop-blur-sm z-50 block bg-transparent sticky will-change-transform w-full h-16 "
 				>
-					<ParallaxLayer 
-						offset={0} 
-						factor={0.1} 
-						sticky={{ start: 0, end: 4 }}
-						className='z-40'
-            		>
-						<NavBar />
-					</ParallaxLayer>	
-
-					<ParallaxLayer
-						offset={1}
-						factor={0.1}
-						sticky={{ start: 1, end: 4 }}
-						className="snap-start z-20"
-					>
-						<div className="backdrop-blur-sm w-screen p-5 h-12 text-center text-3xl inline-block text-black font-semibold"
-							id="title_div"
-						>
-						</div>
-					</ParallaxLayer>
-
+					<NavBar />
+				</div>
+	
+					<BrowserRouter>		
+						<Routes className='z-50'>
+							<Route exact path="/" element={<Home />} />
+							<Route exact path="/activities" element={<Activities />} />
+							<Route exact path="/book" element={<StaySelect />} className='z-50'/>
+							<Route exact path="/book/Swartskaap" element={<DateSelect name='Swartskaap' photos={images_swartskaap.photos} info={info_swartskaap}/>} />
+						</Routes>
+					</BrowserRouter>		
 				
-						
-					<Routes className='z-50'>
-						<Route exact path="/" element={<Home />} />
-						<Route exact path="/activities" element={<Activities />} />
-						<Route exact path="/book" element={<StaySelect />} className='z-50'/>
-						<Route exact path="/book/swartskaap" element={<DateSelect name='swartskaap'/>} />
-					</Routes>
-						
-					
-						
-				</Parallax>
-			</BrowserRouter>
+			</div>
 		);
 	}
 }
