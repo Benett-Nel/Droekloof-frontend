@@ -3,8 +3,8 @@ import "./App.css";
 // import Component from the react module
 import React, { Component } from "react";
 import axios from 'axios';
-import  NavBar from './components/navbar.js';
-import  Home  from './pages/home.js';
+import  NavBar from './components/navbar.jsx';
+import  Home  from './pages/home.jsx';
 import Activities from './pages/activities';
 import StaySelect from "./pages/bookings";
 import DateSelect from './pages/bookdate';

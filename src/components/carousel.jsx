@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { LeftArrowIcon, RightArrowIcon } from './arrowIcons';
 
 
 const slideDelay = 3500;
@@ -6,19 +7,19 @@ const slideDelay = 3500;
 
 function Slideshow(props) {
     const [index, setIndex] = useState(0);
-    const timeoutRef = useRef(null);
+    const timeoutRef = useRef(0);
     const iLen = props.photos.length;
     
     function resetTimeout() {
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
-      }
+    }
 
     useEffect((num = iLen) => {
         
         resetTimeout();
-       timeoutRef.current = setTimeout(
+        timeoutRef.current = setTimeout(
           () =>
             setIndex((prevIndex) =>
               prevIndex === num - 1 ? 0 : prevIndex + 1
@@ -71,20 +72,7 @@ function Slideshow(props) {
                 className="arrow_button"
                 disabled={false}
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-12 w-20 -ml-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                    >
-                        <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15 19l-7-7 7-7"
-                        />
-                    </svg>
+                    <LeftArrowIcon />
                     <span className="sr-only">Prev</span>
                 </button>
                 <button
@@ -92,20 +80,7 @@ function Slideshow(props) {
                 className="arrow_button"
                 disabled={false}
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-12 w-20 -ml-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                    >
-                        <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 5l7 7-7 7"
-                        />
-                    </svg>
+                    <RightArrowIcon />
                 <span className="sr-only">Next</span>
                 </button>
             </div>
