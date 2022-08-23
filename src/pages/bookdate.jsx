@@ -6,16 +6,17 @@ import { hike1 } from '../assets/images/index.js';
 //import Calendar from '../components/calendar.jsx';
 import Slideshow  from '../components/carousel'
 import Popup from '../components/popup.jsx';
-//TODO: what is flowbite and why is it here
 
 
 // Calendar component //
 //////              /////
 import {
     add,
+    differenceInDays,
     eachDayOfInterval,
     endOfMonth,
     format,
+    formatDistance,
     getDay,
     isAfter,
     isBefore,
@@ -28,8 +29,9 @@ import {
     startOfToday,
   } from 'date-fns'
   //import React, { useState } from 'react'
-  import { LeftArrowIcon, RightArrowIcon } from '../components/arrowIcons'
+import { LeftArrowIcon, RightArrowIcon } from '../components/arrowIcons'
 import { addDays } from 'date-fns/esm';
+import { swartskaap_bookings } from '../assets/data/bookings.js';
   
   
 
@@ -41,10 +43,21 @@ function DateSelect(props) {
      }
 
     const [popupTrigger, setPopupTrigger] = useState(false);
+    const [infoPopup, setInfoPopup] = useState(false);
 
-    let [checkIn, setCheckIn] = useState('none');
-    let [checkOut, setCheckOut] = useState('none');
-    let [pickDate, setPickDate] = useState('checkin');
+    const [checkIn, setCheckIn] = useState('none');
+    const [checkOut, setCheckOut] = useState('none');
+    const [pickDate, setPickDate] = useState('checkin');
+    const [firstBookedDayAfterCheckin, setFirstBookedDayAfterCheckin] = useState('none');
+    const [firstBookedDayBeforeCheckOut, setFirstBookedDayBeforeCheckOut] = useState('none');
+
+    const [stayDuration, setStayDuration] = useState(0);
+
+    const [numGuests, setNumGuests] = useState(props.info.capacity);
+    const [numRooms, setNumRooms] = useState(Math.round(props.info.capacity/2));
+
+    const today = startOfToday()
+    const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
 
     ///// Calendar Component
     /////////////////////////////////////////////////
@@ -52,28 +65,28 @@ function DateSelect(props) {
         return classes.filter(Boolean).join(' ')
     };
       
-      function Calendar() {
-          let today = startOfToday()
-          let [selectedDay, setSelectedDay] = useState(today)
-          let [hoveringDay, setHoveringDay] = useState(checkIn)
-          
-          let [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
-          let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
+    function Calendar() {
+
+        let [selectedDay, setSelectedDay] = useState(today)
         
-          let days = eachDayOfInterval({
-            start: firstDayCurrentMonth,
-            end: endOfMonth(firstDayCurrentMonth),
-          })
-        
-          function previousMonth() {
-            let firstDayNextMonth = add(firstDayCurrentMonth, { months: -1 })
-            setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
-          }
-        
-          function nextMonth() {
-            let firstDayNextMonth = add(firstDayCurrentMonth, { months: 1 })
-            setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
-          }
+        let [hoveringDay, setHoveringDay] = useState(checkIn)
+
+        let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
+    
+        let days = eachDayOfInterval({
+        start: firstDayCurrentMonth,
+        end: endOfMonth(firstDayCurrentMonth),
+        })
+    
+        function previousMonth() {
+        let firstDayNextMonth = add(firstDayCurrentMonth, { months: -1 })
+        setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
+        }
+    
+        function nextMonth() {
+        let firstDayNextMonth = add(firstDayCurrentMonth, { months: 1 })
+        setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
+        }
         
         
         function handleDaySelect(day) {
@@ -83,26 +96,70 @@ function DateSelect(props) {
                 // set Check In day
                 setCheckIn(day);
                 document.querySelector('#checkin').value = format(day, 'dd MMM yyyy');
+                setCurrentMonth(format(day, 'MMM-yyyy'))
+
+                setFirstBookedDayAfterCheckin('none');
+                //find first booked day after selected checkin
+                for (var i = 0; i < swartskaap_bookings.length; i++) {
+                    let booking = swartskaap_bookings[i];
+                    if (isAfter(booking.checkIn, day)) {
+                        setFirstBookedDayAfterCheckin(booking.checkIn);
+                        break;
+                    }
+                }
 
                 if (isAfter(day, checkOut)) {
                     console.log('check in after check out')
                     //check in cannot be after checkout, thus let user pick checkout again
-                    setCheckOut('none')
+                    setCheckOut('none');
+                    document.querySelector('#checkout').value = '';
+                    setPickDate('checkout');
+                } else if (isBefore(day, firstBookedDayBeforeCheckOut)) {
+                    console.log('check in before other existing booking');
+                    //check in cannot be before other booking while checkout is after other booking, thus let user pick checkout again
+                    setCheckOut('none');
+                    document.querySelector('#checkout').value = '';
                     setPickDate('checkout');
                 } else {
                     if (checkOut === 'none') {
                         setPickDate('checkout');
                     } else {
+                        //After Checkin and Checkout date is selected, show stay and cost info
                         setPopupTrigger(false);
+
+                        setStayDuration(differenceInDays(checkOut, day));
+                        setInfoPopup(true);
                     }
                 }
             } else {
                 // set Check Out Day
+                
                 setCheckOut(day);
-                setPopupTrigger(false);
+                
+                
                 document.querySelector('#checkout').value = format(day, 'dd MMM yyyy');
+
+                setFirstBookedDayBeforeCheckOut('none');
+                //search bookings in descending order to find first booking before selected checkout
+                for (var i = swartskaap_bookings.length -1; i >= 0; i--) {
+                    let abooking = swartskaap_bookings[i];
+                    if (isBefore(abooking.checkOut, day)) {
+                        console.log(abooking.checkOut)
+                        setFirstBookedDayBeforeCheckOut(abooking.checkOut);
+                        break;
+                    }
+                }
+
+                if (checkIn === 'none') {
+                    setPickDate('checkin');
+                } else {
+                    //After Checkin and Checkout date is selected, show stay and cost info
+                    setPopupTrigger(false);
+                    setStayDuration(differenceInDays(day, checkIn));
+                    setInfoPopup(true);
+                }
+
             }
-          
         }
 
         function handleHoverSelect(day) {
@@ -160,64 +217,94 @@ function DateSelect(props) {
                       <div>S</div>
                     </div>
                     <div className="grid grid-cols-7 mt-2 text-sm">
-                      {days.map((day, dayIdx) => (
-                        <div
-                          key={day.toString()}
-                          className={classNames(
-                            dayIdx === 0 && colStartClasses[getDay(day)],
-                            'py-1.5'
-                          )}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => handleDaySelect(day)}
-                            onMouseOver={() => handleHoverSelect(day)}
-                            className={classNames(
+                        {days.map((day, dayIdx) => {
+                            
+                            let bBooked = false;
+                            let bBookCheckin = false;
+                            let bInvalid = false;
+                            //set bBooked true if day is already booked to disable day button
+                            for (var i = 0; i < swartskaap_bookings.length; i++) {
+                                let booking = swartskaap_bookings[i];
+                                if (isAfter(day, booking.checkIn) && isBefore(day, booking.checkOut)) {
+                                    bBooked = true;
+                                    break;
+                                }
+                                //check in day of other booking. Thus only available for picking checkout.
+                                if (isEqual(day, booking.checkIn)) {
+                                    bBookCheckin = true;
+                                    break;
+                                }
 
-                                //gray out all days before today
-                                isBefore(day, today) && 'text-gray-400',
+                            }
 
-                                //gray out all days before check in ONLY IF user is busy selecting checkout
-                                ((isBefore(day, selectedDay) || isBefore(day, checkIn)) && (pickDate === 'checkout') ) && 'text-gray-400',
+                            return (
+                                <div
+                                    key={day.toString()}
+                                    className={classNames(
+                                        dayIdx === 0 && colStartClasses[getDay(day)],
+                                        'py-1.5'
+                                    )}
+                                >
+                                <button
+                                    type="button"
+                                    onClick={() => handleDaySelect(day)}
+                                    onMouseOver={() => handleHoverSelect(day)}
+                                    className={classNames(
 
-                                !isEqual(day, selectedDay) &&
-                                    isToday(day) &&
-                                        'text-red-500',
-                                !isEqual(day, selectedDay) &&
-                                    !isToday(day) &&
-                                        isSameMonth(day, firstDayCurrentMonth) &&
-                                            'text-gray-900',
-                                !isEqual(day, selectedDay) &&
-                                    !isToday(day) &&
-                                        !isSameMonth(day, firstDayCurrentMonth) &&
-                                            'text-gray-400',
+                                        //gray out all days before today
+                                        isBefore(day, today) && 'text-gray-400',
 
-                                // highlight all days between and including hover and selected check in date ONLY IF selecting check out
-                                ( ((isAfter(day, checkIn) && (isBefore(day, hoveringDay))) || (isEqual(day, checkIn) || isEqual(day, hoveringDay))) && (pickDate === 'checkout'))  &&
-                                    'bg-gray-900 text-white ',
-                                // highlight all days between and including hover and selected check out date ONLY IF selecting check in
-                                ( ((isBefore(day, checkOut) && (isAfter(day, hoveringDay))) || (isEqual(day, checkOut) || isEqual(day, hoveringDay))) && (pickDate === 'checkin')) &&
-                                    'bg-gray-900 text-white ',
+                                        //make all booked days red
+                                        (bBooked || ((bBookCheckin) && (pickDate === 'checkin'))) && 'text-red-400',
+
+                                        //gray out all days before check in ONLY IF user is busy selecting checkout
+                                        // ((isBefore(day, selectedDay) || isBefore(day, checkIn)) && (pickDate === 'checkout') ) && 'text-gray-400',
+
+                                        !isEqual(day, selectedDay) &&
+                                            !isToday(day) &&
+                                                isSameMonth(day, firstDayCurrentMonth) &&
+                                                    'text-gray-900',
+                                        !isEqual(day, selectedDay) &&
+                                            !isToday(day) &&
+                                                !isSameMonth(day, firstDayCurrentMonth) &&
+                                                    'text-gray-400',
+
+                                        // highlight all days between and including hover and selected check in date ONLY IF selecting check out 
+                                        // if it is already booked make bg-light-gray instead
+                                        // unless there are other bookings between day and selected checkin day
+                                        ( (((isAfter(day, checkIn) && (isBefore(day, hoveringDay))) || (isEqual(day, checkIn) || isEqual(day, hoveringDay))) && (pickDate === 'checkout')) && (bBooked === false) && ((isAfter(day, firstBookedDayAfterCheckin)) === false ))  &&
+                                            'bg-gray-900 text-white ',
+                                        // highlight all days between and including hover and selected check out date ONLY IF selecting check in 
+                                        // unless it is already booked 
+                                        ( (((isBefore(day, checkOut) && (isAfter(day, hoveringDay))) || (isEqual(day, checkOut) || isEqual(day, hoveringDay))) && (bBookCheckin === false) && (pickDate === 'checkin')) && (bBooked === false)) &&
+                                            'bg-gray-900 text-white ',
+
+                                        
+                                        (isEqual(day, selectedDay) || isToday(day)) &&
+                                            'font-semibold',
+
+                                        'mx-auto flex h-8 w-8 items-center justify-center rounded-full',
+                                    )}
+
                                 
-                                //highlight all days between check in and check out
-                                // (isAfter(day, checkIn) && isBefore(day, checkOut)) &&
-                                //     'bg-gray-900 text-white', 
+                                    // disable all day before current day and disable all ON or BEFORE selected check in ONLY IF user is busy selecting check out
+                                    //also disable all booked days
+                                    // when selecting checkin disable other guests checkin daybut when selecting checkout, other guests checkin days are available
+                                    // thus one guest can checkout on sam day as other guest checkin
+                                    // if checkin is already selected disable all days after the first booked day after checkin
+                                    // if checkout is already selected disable all days before the first booked day before checkout
+                                    //this is to prevent bookings on top of other bookings
 
-                                
-                                (isEqual(day, selectedDay) || isToday(day)) &&
-                                    'font-semibold',
-                                'mx-auto flex h-8 w-8 items-center justify-center rounded-full'
-                            )}
-                            // disable all day before current day and disable all ON or BEFORE selected check in ONLY IF user is busy selecting check out
-                            disabled={(isBefore(day, today)) || ((isBefore(day, checkIn) || isEqual(day, checkIn)) && (pickDate === 'checkout')) }
-                          >
-                            <time dateTime={format(day, 'yyyy-MM-dd')}>
-                              {format(day, 'd')}
-                            </time>
-                          </button>
-        
-                        </div>
-                      ))}
+                                    disabled={(((isBefore(day, today) || (isBefore(day, checkIn) || isEqual(day, checkIn)) || (isAfter(day, firstBookedDayAfterCheckin))) && (pickDate === 'checkout'))) || (bBooked) || ((bBookCheckin) && (pickDate === 'checkin')) }
+                                >
+                                    <time dateTime={format(day, 'yyyy-MM-dd')}>
+                                    {format(day, 'd')}
+                                    </time>
+                                </button>
+                
+                                </div>
+                            )    
+                        })}
                     </div>
                   </div>
                 </div>
@@ -249,24 +336,39 @@ function DateSelect(props) {
         setPopupTrigger(true);
     }
 
+    function handleGuestChange(event) {
+        const guests = event.target.value;
+        if ((guests <= props.info.capacity) && (guests > 0)) {
+            setNumGuests(guests);
+            // Change num rooms as necessary
+            if (numRooms*2 < guests) {
+                setNumRooms(Math.round(guests/2));
+            }
+            if (numRooms > guests) {
+                setNumRooms(guests);
+            }
+        }
+    }
+
+    function handleRoomChange(event) {
+        const rooms = event.target.value;
+        if ((rooms <= props.info.capacity/2) && (rooms > 0)) {
+            setNumRooms(rooms);
+            // Change num guests as necessary
+            if (rooms*2 < numGuests) {
+                setNumGuests(Math.round(rooms*2));
+            }
+
+            if (rooms > numGuests) {
+                setNumGuests(rooms);
+            }
+        } 
+    } 
 
     return (
         <Parallax pages={1}
             className='snap-proximity snap-y overflow-y-scroll bg-gray-100'
         >
-
-            {/* @ts-ignore */}
-            {/* <Popup trigger={popupTrigger} >
-                <button
-                    className='float-right inline-block text-sm lg:text-md px-2 py-1 leading-none
-                    rounded text-gray-400 bg-gray-600 
-                    hover:text-white  m-2  hover:font-semibold' 
-                    onClick={() => setPopupTrigger(false)}
-                >
-                    Close
-                </button>
-                <Calendar />
-            </Popup> */}
 
             <ParallaxLayer
                 offset={0.1}
@@ -293,7 +395,7 @@ function DateSelect(props) {
                          
                     </div> 
 
-                    <div className='w-full lg:w-[30%] m-8 mt-0 inline-block rounded-xl bg-white'>
+                    <div className='w-full lg:w-[35%] m-8 mt-0 inline-block rounded-xl bg-white'>
                         <img
                             className='aspect-video w-full rounded-t-xl' 
                             src={hike1} 
@@ -332,19 +434,56 @@ function DateSelect(props) {
                             </div>
                         </div>
 
-                        {/* Calendar to pop up */}
-                        <Popup trigger={popupTrigger} >
-                            <button
-                                className='float-right inline-block text-sm lg:text-md px-2 py-1 leading-none
-                                rounded text-gray-400 bg-gray-600 
-                                hover:text-white  m-2  hover:font-semibold' 
-                                onClick={() => setPopupTrigger(false)}
-                            >
-                                Close
-                            </button>
-                            <Calendar />
-                        </Popup >
+                        {/* number of guests selector */}
+                        <div>
+                            <label className='ml-2'>Num. of Guests:</label>
+                            <input id='numGuests' type={"number"} min="1" max="6" className="bg-slate-400 rounded-md m-3 w-1/2 h-8" value={numGuests} onChange={(e) => handleGuestChange(e)} ></input>
+                        </div>
+
+                        {/* number of Rooms selector */}
+                        <div>
+                            <label className='ml-2'>Num. of Rooms:</label>
+                            <input type={"number"} min="1" max="3" className="bg-slate-400 rounded-md m-3 w-1/2 h-8" value={numRooms} onChange={(e) => handleRoomChange(e)}></input>
+                        </div>
+
+                        
+                            <div className='mt-2 w-full flex flex-col items-center justify-center backdrop-blur-md'>
+                                <div className='h-fit w-fit rounded-xl bg-slate-100'>
+                                    {/* Calendar to pop up */}
+                                    <Popup trigger={popupTrigger} >
+                                        <button
+                                            className='float-right inline-block text-sm lg:text-md px-2 py-1 leading-none
+                                            rounded text-gray-400 bg-gray-600 
+                                            hover:text-white  m-2  hover:font-semibold' 
+                                            onClick={() => setPopupTrigger(false)}
+                                        >
+                                            Close
+                                        </button>
+                                        <Calendar />
+                                    </Popup >
+                                </div>
+                            </div>
+                        
+
+                        
+                        {/* booking info div */}
+                        <Popup trigger={infoPopup}>
+                            <div className='m-2 border-b border-gray-300'>{props.name} from {(checkIn !== 'none') ? <span className='font-semibold'>{format(checkIn, 'dd MMM yyyy')}</span> : 'TBD'} to {(checkOut !== 'none') ? <span className='font-semibold'>{format(checkOut, 'dd MMM yyyy')}</span> : 'TBD'}.</div>
+                            <div className='m-2 border-b border-gray-300'><span className='font-semibold'>{stayDuration}</span> night stay for <span className='font-semibold'>{numGuests}</span> people</div>
+                            <div className="m-2 border-b border-gray-300">Price per Person Per Night: <span className='font-semibold float-right mr-3'>R {props.info.price / numGuests}</span></div>
+                            <div className="m-2 border-b border-gray-300">Total Price Per Night: <span className='font-semibold float-right mr-3'>R {props.info.price}</span></div>
+                            <div className="m-2 border-b border-gray-300">Total Price: <span className='font-semibold float-right mr-3'>R {props.info.price * stayDuration}</span></div>
+                        
+                            <div>
+                                <form>
+                                    <input type="hidden" name=""></input>
+                                </form>
+                            </div>
+                        </Popup>
+                        
                     </div>
+
+                    
                 
                 </div>
             </ParallaxLayer>
