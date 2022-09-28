@@ -1,16 +1,3 @@
-import {
-    swartskaap1,
-    swartskaap2,
-} from '../images/index'
-
-export const images_swartskaap = {
-    'title': 'Swartskaap',
-    'photos': [
-        swartskaap1,
-        swartskaap2,
-    ]
-}
-
 export const info_swartskaap = {
     "description": "Clear your mind and explore the Klein Karoo or just lay back and disconnect form the world while staying at our beautiful Swartskaap house. It is called Swartskaap because it is unlike any other house. You will feel like you are the only people on earth while watchin the sunset from our deck or adventuring through our mountain range.",
 

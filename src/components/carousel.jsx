@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { LeftArrowIcon, RightArrowIcon } from './arrowIcons';
 
 
-const slideDelay = 3500;
+const slideDelay = 35000;
 
 
 function Slideshow(props) {
@@ -58,8 +58,8 @@ function Slideshow(props) {
                         key={index}
                     >    
                         <img
-                            className='aspect-video w-full' 
-                            src={image} 
+                            className='aspect-[3/2] w-full h-full' 
+                            src={image.image} 
                             alt={props.title}
                         />
                     </div>

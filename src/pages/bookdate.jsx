@@ -1,12 +1,16 @@
 // @ts-nocheck
 import { Parallax, ParallaxLayer } from '@react-spring/parallax';
-import React, {Component} from 'react';
+import React from 'react';
 import { useState } from 'react';
-import { hike1 } from '../assets/images/index.js';
-//import Calendar from '../components/calendar.jsx';
 import Slideshow  from '../components/carousel'
 import Popup from '../components/popup.jsx';
 
+// use jotai atoms to manage state and make use of local storage to use state bariable in other page as well
+// the local storage is necesarry because atom resets when page is refreshed, unless it has storage
+import { useAtom } from 'jotai';
+
+//atom containing info about currently logged in user, profile popup-menu and booking info 
+import { userAtom, profileMenuAtom, bookingInfoAtom, navMenuAtom } from '../App';
 
 // Calendar component //
 //////              /////
@@ -28,22 +32,96 @@ import {
     parseISO,
     startOfToday,
   } from 'date-fns'
-  //import React, { useState } from 'react'
-import { LeftArrowIcon, RightArrowIcon } from '../components/arrowIcons'
-import { addDays } from 'date-fns/esm';
-import { swartskaap_bookings } from '../assets/data/bookings.js';
-  
-  
 
-function DateSelect(props) {
+import { LeftArrowIcon, RightArrowIcon } from '../components/arrowIcons';
+import { HiOutlineMinus, HiOutlinePlus } from 'react-icons/hi';
+import { directions, included, notIncluded } from '../assets/data/AddInfo.js';
+import all_bookings from '../assets/data/bookings.js';
+
+function BookingInfo(props) {
+
+    const [additionalInfoTrigger, setAdditionalInfoTrigger] = useState(false);
+
+    function AdditionalInfo(props) {
+
+        if (props.text === "What's included") {
+            var infoList = included.map(function(info){
+                return <li>{info}</li>;
+              })
+        } else if (props.text === "You need to bring") {
+            var infoList = notIncluded.map(function(info){
+                return <li>{info}</li>;
+              })
+        } else if (props.text === "Directions") {
+            var infoList = directions.map(function(info){
+                return <li>{info}</li>;
+              })
+        }
+        return (
+            <ul 
+                className='list-disc text-md ml-5'
+            >
+                {infoList}
+            </ul>
+        )
+    }
+
+    return (
+        <div
+            onClick={() => {setAdditionalInfoTrigger(!additionalInfoTrigger)}} 
+            className='items-center inline-flex flex-col border-t mt-0 p-2 font-light border-gray-400 text-gray-500 hover:text-black hover:cursor-pointer mb-0 m-4 w-full'
+        >
+            <div
+                className='items-center inline-flex flex-row font-light hover:text-black hover:cursor-pointer w-full'
+            >
+                {additionalInfoTrigger ? <HiOutlineMinus size={20} className=' m-1 mr-4'/> : <HiOutlinePlus size={20} className=' m-1 mr-4'/>}
+                <span className=' text-lg '>
+                    {props.text}
+                </span>
+            </div>
+            <div className='block w-full lg:ml-20 ml-8'>
+                {additionalInfoTrigger && <AdditionalInfo text={props.text}/>}
+            </div>
+        </div>
+    )
+}
+
+function DateSelect(props) { 
+    
+    const [bookingInfo, setBookingInfo] = useAtom(bookingInfoAtom);
+
+    const [profileMenuPopup, setProfileMenuPopup] = useAtom(profileMenuAtom);
+    const [navMenuPopup, setNavMenuPopup] = useAtom(navMenuAtom);
+
+    const [stayBookings, setStayBookings] = useState([])
+
     window.onload = function() {
-        /* Set style classes to enable background blur when bookdate page is rendered*/
-            // @ts-ignore
-            document.getElementById('navbar').className = 'lg:backdrop-blur-sm backdrop-blur-none h-16 z-20 flex items-center justify-between flex-wrap bg-inherit p-6';
-     }
+        /* Set style classes to disable background blur when bookdate page is rendered*/
+        document.getElementById('navbar').className = 'backdrop-blur-none h-16 z-20 flex items-center justify-between flex-wrap bg-inherit p-6';
+        
+        // find bookings for the current stay //
+        let currentBookings = [];
+        for (var i = 0; i < all_bookings.length; i++) {
+            let booking = all_bookings[i];
+            booking.check_in = new Date(booking.check_in)
+            booking.check_out = new Date(booking.check_out)
+            if (booking.stay === stayName) {
+                currentBookings.push(booking);
+            } 
+        }
+        setStayBookings(currentBookings)
+
+        // Initialize booking info atom when booking selection page is loaded
+        setBookingInfo({});
+    };
+
+    const [loggedUser, _] = useAtom(userAtom);
+
+    const stayName = props.name;
 
     const [popupTrigger, setPopupTrigger] = useState(false);
     const [infoPopup, setInfoPopup] = useState(false);
+
 
     const [checkIn, setCheckIn] = useState('none');
     const [checkOut, setCheckOut] = useState('none');
@@ -58,8 +136,21 @@ function DateSelect(props) {
 
     const today = startOfToday()
     const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
+    
 
-    ///// Calendar Component
+
+    ///// Calendar Component ////////////////////////
+    // I used a calendar component from a youtuber's open github repo
+    // he copied the calendar component from tailwindui components after consulting them
+    // 
+    // I added all onClick and onHover events
+    // I added functionality to setFocus on checkout after checkin is selected
+    // I added the disabling logic of booked dates and dates where checkin and checkout would surround booked dates
+    // Added the bg style functionality to make the selected stay dates seem highlighted and following the cursor with onHover events
+    // I also changed the currentMonth to the month selected for checkin so that the calendar will automatically show the month 
+    // with the checkin in when choosin chekcout
+    //
+    //The rendering of the number buttons in the respective weekday collumns however is work done by the tailwindui component creators
     /////////////////////////////////////////////////
     function classNames(...classes) {
         return classes.filter(Boolean).join(' ')
@@ -100,10 +191,10 @@ function DateSelect(props) {
 
                 setFirstBookedDayAfterCheckin('none');
                 //find first booked day after selected checkin
-                for (var i = 0; i < swartskaap_bookings.length; i++) {
-                    let booking = swartskaap_bookings[i];
-                    if (isAfter(booking.checkIn, day)) {
-                        setFirstBookedDayAfterCheckin(booking.checkIn);
+                for (var i = 0; i < stayBookings.length; i++) {
+                    let booking = stayBookings[i];
+                    if (isAfter(booking.check_in, day)) {
+                        setFirstBookedDayAfterCheckin(booking.check_in);
                         break;
                     }
                 }
@@ -141,11 +232,10 @@ function DateSelect(props) {
 
                 setFirstBookedDayBeforeCheckOut('none');
                 //search bookings in descending order to find first booking before selected checkout
-                for (var i = swartskaap_bookings.length -1; i >= 0; i--) {
-                    let abooking = swartskaap_bookings[i];
-                    if (isBefore(abooking.checkOut, day)) {
-                        console.log(abooking.checkOut)
-                        setFirstBookedDayBeforeCheckOut(abooking.checkOut);
+                for (var i = stayBookings.length -1; i >= 0; i--) {
+                    let abooking = stayBookings[i];
+                    if (isBefore(abooking.check_out, day)) {
+                        setFirstBookedDayBeforeCheckOut(abooking.check_out);
                         break;
                     }
                 }
@@ -223,14 +313,14 @@ function DateSelect(props) {
                             let bBookCheckin = false;
                             let bInvalid = false;
                             //set bBooked true if day is already booked to disable day button
-                            for (var i = 0; i < swartskaap_bookings.length; i++) {
-                                let booking = swartskaap_bookings[i];
-                                if (isAfter(day, booking.checkIn) && isBefore(day, booking.checkOut)) {
+                            for (var i = 0; i < stayBookings.length; i++) {
+                                let booking = stayBookings[i];
+                                if (isAfter(day, booking.check_in) && isBefore(day, booking.check_out)) {
                                     bBooked = true;
                                     break;
                                 }
                                 //check in day of other booking. Thus only available for picking checkout.
-                                if (isEqual(day, booking.checkIn)) {
+                                if (isEqual(day, booking.check_in)) {
                                     bBookCheckin = true;
                                     break;
                                 }
@@ -295,7 +385,7 @@ function DateSelect(props) {
                                     // if checkout is already selected disable all days before the first booked day before checkout
                                     //this is to prevent bookings on top of other bookings
 
-                                    disabled={(((isBefore(day, today) || (isBefore(day, checkIn) || isEqual(day, checkIn)) || (isAfter(day, firstBookedDayAfterCheckin))) && (pickDate === 'checkout'))) || (bBooked) || ((bBookCheckin) && (pickDate === 'checkin')) }
+                                    disabled={(((isBefore(day, today) || ((isBefore(day, checkIn) || isEqual(day, checkIn)) || (isAfter(day, firstBookedDayAfterCheckin))) && (pickDate === 'checkout')))) || (bBooked) || ((bBookCheckin) && (pickDate === 'checkin')) }
                                 >
                                     <time dateTime={format(day, 'yyyy-MM-dd')}>
                                     {format(day, 'd')}
@@ -365,45 +455,92 @@ function DateSelect(props) {
         } 
     } 
 
+    const confirmBooking = async () => {
+        setBookingInfo({
+            "stay": stayName,
+            "checkIn": format(checkIn, 'dd MMM yyyy'),
+            "checkOut": format(checkOut, 'dd MMM yyyy'),
+            "people": numGuests,
+            "rooms": numRooms,
+            "cost": props.info.price * stayDuration,
+        })
+
+        console.log(loggedUser)
+        if (loggedUser !== 'none') {
+            window.location.assign("/checkout");    
+        } else {
+            window.location.assign("/signup");
+        }
+        
+    }
+
+    
+
     return (
         <Parallax pages={1}
-            className='snap-proximity snap-y overflow-y-scroll bg-gray-100'
+            className='bg-gray-100'
+            onClick={() => {
+                if (profileMenuPopup === 'block') {
+                    setProfileMenuPopup('hidden');
+                }
+
+                if (navMenuPopup === 'block') {
+                    setNavMenuPopup('hidden');
+                }
+            }}
         >
 
             <ParallaxLayer
                 offset={0.1}
                 factor={0.9}
-                className='z-0 overflow-y-scroll'
+                className='z-0 overflow-scroll'
             >
-                <div className='w-full text-center font-mono font-semibold text-4xl mb-10'>Booking Summary</div>
-                <div className='w-3/4 h-full absolute left-[15%] inline-flex '>
+                {/* <div className='w-full text-center font-mono font-semibold text-4xl mb-10'>Booking Summary</div> */}
+                <div className='lg:w-3/4 w-full h-fit absolute lg:left-[15%] lg:inline-flex pb-8 pr-8 lg:flex-row flex-col'>
 
-                    <div className='w-full lg:w-[65%] left-0 m-8 mt-0 ml-0 rounded-xl bg-white'>
+                    <div className='w-full lg:w-[65%] h-fit backdrop-blur-none left-0 lg:mr-8 mr-4 ml-4 mt-0 lg:ml-0 rounded-xl bg-gray-50 shadow-md shadow-gray-200 lg:mb-3'>
                         
                         
                         <div className='overflow-hidden rounded-t-xl '>
                             <Slideshow photos={props.photos}/>
                         </div>
                             
-                        
-                        <h2 className=' m-5 md:text-3xl text-2xl font-mono font-semibold'>{props.name}</h2>
+                        <div className='pr-8'>
+                            <h2 className=' m-5 mb-1 md:text-3xl text-2xl font-mono font-semibold'>{stayName}</h2>
 
-                        <div>
-                            <p>From R{`${props.info.price}`} per night</p>
-                            <p>Up to {`${props.info.capacity}`} Guests</p>
+                            <div className='ml-4 mb-4'>
+                                <ul className='list-disc text-md ml-5'>
+                                    <li>R{`${props.info.price}`} per night</li>
+                                    <li>Up to {`${props.info.capacity}`} Guests</li>
+                                    <li>3 Rooms</li>
+                                    <li>2 Double beds and 2 Single beds</li>
+                                    <li>Ensuite Bathroom in Every room</li>
+                                    <li>Outdoor Shower built into rock face</li>
+                                    <li>Fresh Water Swimming Dam</li>
+                                </ul>
+                            </div>
+
+                            <BookingInfo text="What's included"/>
+
+                            <BookingInfo text="You need to bring"/>
+
+                            <BookingInfo text="Directions"/>
+
+                            <div className='border-gray-400 border-t h-2 w-full mx-4' />
+
                         </div>
-                         
+
                     </div> 
 
-                    <div className='w-full lg:w-[35%] m-8 mt-0 inline-block rounded-xl bg-white'>
+                    <div className='min-h-fit w-full lg:w-[30%] lg:ml-8 lg:mr-0 mx-4 mt-6 lg:mb-3 lg:mt-0 inline-block rounded-xl bg-gray-50 shadow-md shadow-gray-200'>
                         <img
-                            className='aspect-video w-full rounded-t-xl' 
-                            src={hike1} 
+                            className=' aspect-auto w-full rounded-t-xl' 
+                            src="images/farm-generic/farm.jpg" 
                             alt='mountain photo'
                         />
                         
                         <h4
-                            className='text-xl font-semibold m-3'
+                            className='text-2xl lg:text-xl font-semibold m-3'
                         >
                             Select Dates
                         </h4>
@@ -417,7 +554,7 @@ function DateSelect(props) {
                                 <div className="flex absolute inset-y-0 left-0 items-center pl-1 pointer-events-none">
                                     <svg aria-hidden="true" className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
                                 </div>
-                                <input id="checkin" name="checkin" type="text" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 p-2.5 pr-0 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 datepicker-input" placeholder="Select check-in"/>
+                                <input disabled id="checkin" name="checkin" type="text" className="hover:cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 p-2.5 pr-0 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 datepicker-input" placeholder="Select check-in"/>
                             </div>
 
                             <span className="mx-4 text-gray-500">to</span>
@@ -430,7 +567,7 @@ function DateSelect(props) {
                                 <div className="flex absolute inset-y-0 left-0 items-center pl-1 pointer-events-none">
                                     <svg aria-hidden="true" className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
                                 </div>
-                                <input id="checkout" name="checkout" type="text" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 p-2.5 pr-0 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 datepicker-input" placeholder="Select check-out"/>
+                                <input disabled id="checkout" name="checkout" type="text" className="hover:cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 p-2.5 pr-0 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 datepicker-input" placeholder="Select check-out"/>
                             </div>
                         </div>
 
@@ -468,16 +605,15 @@ function DateSelect(props) {
                         
                         {/* booking info div */}
                         <Popup trigger={infoPopup}>
-                            <div className='m-2 border-b border-gray-300'>{props.name} from {(checkIn !== 'none') ? <span className='font-semibold'>{format(checkIn, 'dd MMM yyyy')}</span> : 'TBD'} to {(checkOut !== 'none') ? <span className='font-semibold'>{format(checkOut, 'dd MMM yyyy')}</span> : 'TBD'}.</div>
+                            <div className='m-2 border-b border-gray-300'>{stayName} from {(checkIn !== 'none') ? <span className='font-semibold'>{format(checkIn, 'dd MMM yyyy')}</span> : 'TBD'} to {(checkOut !== 'none') ? <span className='font-semibold'>{format(checkOut, 'dd MMM yyyy')}</span> : 'TBD'}.</div>
                             <div className='m-2 border-b border-gray-300'><span className='font-semibold'>{stayDuration}</span> night stay for <span className='font-semibold'>{numGuests}</span> people</div>
                             <div className="m-2 border-b border-gray-300">Price per Person Per Night: <span className='font-semibold float-right mr-3'>R {props.info.price / numGuests}</span></div>
                             <div className="m-2 border-b border-gray-300">Total Price Per Night: <span className='font-semibold float-right mr-3'>R {props.info.price}</span></div>
                             <div className="m-2 border-b border-gray-300">Total Price: <span className='font-semibold float-right mr-3'>R {props.info.price * stayDuration}</span></div>
                         
                             <div>
-                                <form>
-                                    <input type="hidden" name=""></input>
-                                </form>
+                                <button onClick={confirmBooking} className='rounded-lg px-2 py-1 m-2 text-lg bg-blue-500 text-white hover:border-2 hover:border-blue-500' >Checkout </button>
+                                
                             </div>
                         </Popup>
                         

@@ -47,14 +47,24 @@ input[type="number"]::-webkit-inner-spin-button {
   }
 
 .nav-item {
-    @apply block mt-4 lg:inline-block lg:mt-0 text-gray-400
-     hover:text-black mr-6 text-base lg:text-lg w-auto  hover:font-semibold
+    @apply block mt-2 lg:inline-block lg:mt-0 text-gray-400
+     hover:text-black mr-6 text-lg lg:text-xl w-auto  
+     lg:relative lg:top-1
 }
 
 .nav-button {
-    @apply inline-block text-base lg:text-lg px-4 py-2 leading-none border
+    @apply inline-block text-base lg:text-lg px-2 py-1 pt-2 lg:pt-1 leading-none border
      rounded text-gray-400 border-gray-400 hover:border-black
-      hover:text-black  mt-4 lg:mt-0 hover:font-semibold hover:border-2
+      hover:text-black  mt-4 lg:mt-0  hover:border-2
+}
+
+.dropdown {
+    @apply absolute lg:right-40 lg:top-12 translate-x-[70%] rounded-lg p-2
+        bg-slate-200
+}
+
+.menu-item {
+    @apply h-8 flex items-center rounded p-1
 }
 
 .house {
@@ -82,6 +92,6 @@ input[type="number"]::-webkit-inner-spin-button {
     ease-in-out duration-300 mt-2
 }
 
-#TBD {
-    @apply border-x border-black
+.checkout_info {
+    @apply m-4 text-lg
 }

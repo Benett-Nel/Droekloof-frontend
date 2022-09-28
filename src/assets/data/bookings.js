@@ -1,13 +1,9 @@
+import axios from "axios"
 
-export const swartskaap_bookings = [
-    {
-        checkIn: new Date('2022/08/23'),
-        checkOut: new Date('2022/08/25'), 
-    },
+const api = axios.create({
+    baseURL: "http://localhost:8000/api/"
+})
+const response = await api.get('bookings/')
+const all_bookings = response.data;
 
-    {
-        checkIn: new Date('2022/09/15'),
-        checkOut: new Date('2022/09/25'),
-    }
-
-]
+export default all_bookings
