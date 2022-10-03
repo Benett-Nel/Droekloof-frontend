@@ -1,35 +1,92 @@
+// @ts-nocheck
 // import Component from the react module
 import React from "react";
-import { FaHome } from 'react-icons/fa';
-import { ParallaxLayer } from "@react-spring/parallax";
+import { FaHome, FaUserCircle } from 'react-icons/fa';
+import { useAtom } from "jotai"; 
+import { userAtom, profileMenuAtom, navMenuAtom } from "../App";
+import { HiMenu } from "react-icons/hi";
+import NavDropdown from "./navDropdown";
+import ProfileDropdown from "./profileDropdown";
+
 
 function NavBar() {
+
+    const [loggedUser, setLoggedUser] = useAtom(userAtom);
+
+    const [profileMenuPopup, setProfileMenuPopup] = useAtom(profileMenuAtom);
+
+    const [navMenuPopup, setNavMenuPopup] = useAtom(navMenuAtom);
+    
+    function toggleProfilePopup() {
+        if (profileMenuPopup === 'hidden') {
+            setProfileMenuPopup('block');
+        } else {
+            setProfileMenuPopup('hidden');
+        }
+    }
+
+    function toggleNavPopup() {
+        if (navMenuPopup === 'hidden') {
+            setNavMenuPopup('block');
+        } else {
+            setNavMenuPopup('hidden');
+        }
+    }
 
     return (
         
             <nav 
                 id="navbar"
-                className="w-full h-16 z-20 flex items-center justify-between flex-wrap bg-transparent p-6">
-                <div className="flex items-center flex-shrink flex-grow text-black mr-6">
-                    <svg className="fill-current h-8 w-8 mr-2" width="54" height="54" viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 22.1c1.8-7.2 6.3-10.8 13.5-10.8 10.8 0 12.15 8.1 17.55 9.45 3.6.9 6.75-.45 9.45-4.05-1.8 7.2-6.3 10.8-13.5 10.8-10.8 0-12.15-8.1-17.55-9.45-3.6-.9-6.75.45-9.45 4.05zM0 38.3c1.8-7.2 6.3-10.8 13.5-10.8 10.8 0 12.15 8.1 17.55 9.45 3.6.9 6.75-.45 9.45-4.05-1.8 7.2-6.3 10.8-13.5 10.8-10.8 0-12.15-8.1-17.55-9.45-3.6-.9-6.75.45-9.45 4.05z"/></svg>
-                    <span className="font-semibold text-3xl lg:text-4xl tracking-tight">Droëkloof</span>
-                    <span className="ml-3 mb-0 pt-3 lg:pt-4 lg:text-lg relative bottom-0 align-text-bottom font-semibold text-base tracking-tight">Karoo Resort and Olive Estate</span>
-                </div>
-                <div className="w-full block flex-grow lg:flex lg:absolute right-0 mr-6 lg:w-auto">
-                    <div className="text-sm lg:flex-grow">
-                        <a exact="true" href="/" className="nav-item">
-                            <FaHome className="relative top-1"  size={24}/>
-                        </a>
-                        <a exact="true" href="/activities" className="nav-item">
-                        Activities
-                        </a>
+                className="w-full lg:h-16 h-fit z-20 block lg:inline-flex  bg-transparent px-6">
+
+                <div className="flex items-center flex-shrink flex-grow text-black mr-6 absolute lg:top-2">
                     
-                        <a exact="true" href="/book" 
-                        className='nav-button'>
-                            Book
-                        </a>
-                    </div>
+                    <span className="font-semibold text-3xl lg:text-4xl tracking-tight">Droëkloof</span>
+                    <span className="invisible lg:visible ml-3 mb-0 pt-1 lg:pt-4 lg:text-lg relative bottom-0 align-text-bottom font-semibold text-base tracking-tight">Karoo Resort and Olive Estate</span>
                 </div>
+
+                <div className="hidden w-full lg:inline-flex lg:absolute right-0 mr-6 lg:w-auto lg:mt-2">
+                    
+                    <a exact="true" href="/" className="nav-item">
+                        <FaHome className="relative top-1"  size={28}/>
+                    </a>
+                    <a exact="true" href="/activities" className="nav-item pt-1">
+                    Activities
+                    </a>
+
+                    {(loggedUser === 'none') ?
+                    <a exact="true" href="/login" className="nav-item pt-1">
+                        Log in
+                    </a> 
+                    : <>
+                        <button className="nav-item absolute top-0 right-0"
+                        onClick={() => toggleProfilePopup()}>
+                            <FaUserCircle size={30} /> 
+                        </button> 
+                        <ProfileDropdown />
+                    </>}
+
+                    <a exact="true" href="/book" 
+                    className='nav-button'>
+                        Book Now
+                    </a>
+                    
+                </div>
+
+                <div className="lg:hidden w-full inline-flex lg:absolute right-0 mr-6 lg:w-auto lg:mt-2 mt-2">
+                    <button className="nav-item absolute top-0 right-0"
+                    onClick={() => {
+                            toggleNavPopup();
+                            if (profileMenuPopup === 'block') {
+                                setProfileMenuPopup('hidden');
+                            }
+                        }}
+                    >
+                        <HiMenu size={30} /> 
+                    </button> 
+                    <NavDropdown />
+                </div>
+
             </nav>
         
     )

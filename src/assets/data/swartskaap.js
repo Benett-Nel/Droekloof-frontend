@@ -1,24 +1,17 @@
-import {
-    swartskaap1,
-    swartskaap2,
-} from '../images/index'
-
-export const images_swartskaap = {
-    'title': 'Swartskaap',
-    'photos': [
-        swartskaap1,
-        swartskaap2,
-    ]
-}
-
 export const info_swartskaap = {
-    "description": "Clear your mind and explore the Klein Karoo or just lay back and disconnect form the world while staying at our beautiful Swartskaap house. It is called Swartskaap because it is unlike any other house. You will feel like you are the only people on earth while watchin the sunset from our deck or adventuring through our mountain range.",
+    "description": "Clear your mind and explore the Klein Karoo or just lay back and disconnect from the world while staying at our beautiful Swartskaap house. It is called Swartskaap because it is unlike any other stay. You will feel like you are the only people on earth while watching the sunset from our deck or adventuring through our mountain range.",
 
     "info_list": [
-        '6 people', 
+        'Up to 6 people', 
         '3 Bedrooms', 
-        'Swimming Dam', 
+        'Ensuite Bathroom in all rooms',
+        'Farm Style Swimming Pool', 
         'Sunset Deck',
+        'Roofed Fireplace',
+        'Free Wifi',
+        'DSTV and Netflix',
+        'Fully Equipped Kitchen',
+        'Additional Outdoor Shower',
     ],
     "price": 1800,
     "capacity": 6,

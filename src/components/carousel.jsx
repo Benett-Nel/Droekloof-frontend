@@ -2,13 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { LeftArrowIcon, RightArrowIcon } from './arrowIcons';
 
 
-const slideDelay = 3500;
-
-
 function Slideshow(props) {
     const [index, setIndex] = useState(0);
     const timeoutRef = useRef(0);
     const iLen = props.photos.length;
+    const slideDelay = props.delay;
     
     function resetTimeout() {
         if (timeoutRef.current) {
@@ -58,15 +56,15 @@ function Slideshow(props) {
                         key={index}
                     >    
                         <img
-                            className='aspect-video w-full' 
-                            src={image} 
+                            className={`aspect-${props.aspect} w-full h-full object-cover`} 
+                            src={image.image} 
                             alt={props.title}
                         />
                     </div>
                 ))}
             </div>
 
-            <div className="hidden slideshowArrows lg:flex  justify-between absolute top-0 left-0 w-full h-full z-10">
+            <div className="slideshowArrows flex  justify-between absolute top-0 left-0 w-full h-full z-10">
                 <button
                 onClick={movePrev}
                 className="arrow_button"
