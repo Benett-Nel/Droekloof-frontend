@@ -28,6 +28,7 @@ import {
     isSameDay,
     isSameMonth,
     isToday,
+    isWithinInterval,
     parse,
     parseISO,
     startOfToday,
@@ -37,24 +38,30 @@ import { LeftArrowIcon, RightArrowIcon } from '../components/arrowIcons';
 import { HiOutlineMinus, HiOutlinePlus } from 'react-icons/hi';
 import { directions, included, notIncluded } from '../assets/data/AddInfo.js';
 import all_bookings from '../assets/data/bookings.js';
+import { info_swartskaap } from '../assets/data/swartskaap';
 
 function BookingInfo(props) {
 
-    const [additionalInfoTrigger, setAdditionalInfoTrigger] = useState(false);
+    const [additionalInfoTrigger, setAdditionalInfoTrigger] = useState('hidden');
 
     function AdditionalInfo(props) {
 
+        let i = 0;
+
         if (props.text === "What's included") {
             var infoList = included.map(function(info){
-                return <li>{info}</li>;
+                i++;
+                return <li key={`A${i}`}>{info}</li>;
               })
-        } else if (props.text === "You need to bring") {
-            var infoList = notIncluded.map(function(info){
-                return <li>{info}</li>;
+        } else if (props.text === "Not Included") {
+            var infoList = info_swartskaap.excludes.map(function(info){
+                i++;
+                return <li key={`B${i}`}>{info}</li>;
               })
         } else if (props.text === "Directions") {
             var infoList = directions.map(function(info){
-                return <li>{info}</li>;
+                i++;
+                return <li key={`C${i}`}>{info}</li>;
               })
         }
         return (
@@ -68,19 +75,19 @@ function BookingInfo(props) {
 
     return (
         <div
-            onClick={() => {setAdditionalInfoTrigger(!additionalInfoTrigger)}} 
+            onClick={() => {if (additionalInfoTrigger === 'hidden') {setAdditionalInfoTrigger('block')} else {setAdditionalInfoTrigger('hidden')}}}
             className='items-center inline-flex flex-col border-t mt-0 p-2 font-light border-gray-400 text-gray-500 hover:text-black hover:cursor-pointer mb-0 m-4 w-full'
         >
             <div
                 className='items-center inline-flex flex-row font-light hover:text-black hover:cursor-pointer w-full'
             >
-                {additionalInfoTrigger ? <HiOutlineMinus size={20} className=' m-1 mr-4'/> : <HiOutlinePlus size={20} className=' m-1 mr-4'/>}
+                {(additionalInfoTrigger === 'block') ? <HiOutlineMinus size={20} className=' m-1 mr-4'/> : <HiOutlinePlus size={20} className=' m-1 mr-4'/>}
                 <span className=' text-lg '>
                     {props.text}
                 </span>
             </div>
-            <div className='block w-full lg:ml-20 ml-8'>
-                {additionalInfoTrigger && <AdditionalInfo text={props.text}/>}
+            <div className={`${additionalInfoTrigger} w-full lg:ml-20 ml-8`}>
+                <AdditionalInfo text={props.text}/>
             </div>
         </div>
     )
@@ -98,14 +105,15 @@ function DateSelect(props) {
     window.onload = function() {
         /* Set style classes to disable background blur when bookdate page is rendered*/
         document.getElementById('navbar').className = 'backdrop-blur-none h-16 z-20 flex items-center justify-between flex-wrap bg-inherit p-6';
-        
+        console.log(all_bookings)
         // find bookings for the current stay //
         let currentBookings = [];
         for (var i = 0; i < all_bookings.length; i++) {
             let booking = all_bookings[i];
-            booking.check_in = new Date(booking.check_in)
-            booking.check_out = new Date(booking.check_out)
+            
             if (booking.stay === stayName) {
+                booking.check_in = new Date(booking.check_in)
+                booking.check_out = new Date(booking.check_out)
                 currentBookings.push(booking);
             } 
         }
@@ -222,6 +230,8 @@ function DateSelect(props) {
                         setInfoPopup(true);
                     }
                 }
+
+                console.log(firstBookedDayAfterCheckin)
             } else {
                 // set Check Out Day
                 
@@ -252,16 +262,16 @@ function DateSelect(props) {
             }
         }
 
-        function handleHoverSelect(day) {
+        function handleHoverSelect(day, bBooked, bBookCheckin) {
             if (pickDate === 'checkin') {
                 // set Hovering day for highlight purposes ONLY IF date is valid
-                if ((isAfter(day, today) || isEqual(day, today)) && ((isBefore(day, checkOut)) || (checkOut === 'none'))) {
+                if ((isAfter(day, today) || isEqual(day, today)) && ((isBefore(day, checkOut)) || (checkOut === 'none'))  && ((bBooked === false) && (bBookCheckin === false))) {
                     setHoveringDay(day);
                     document.querySelector('#checkin').value = format(day, 'dd MMM yyyy');
                 }
             } else {
                 // set Hovering Day for highlight purposes ONLY IF date is valid
-                if ((isAfter(day, today) || isEqual(day, today)) && (isAfter(day, checkIn))) {
+                if ((isAfter(day, today) || isEqual(day, today)) && (isAfter(day, checkIn)) && (bBooked === false)) {
                     setHoveringDay(day);
                     document.querySelector('#checkout').value = format(day, 'dd MMM yyyy');
                 }
@@ -311,21 +321,26 @@ function DateSelect(props) {
                             
                             let bBooked = false;
                             let bBookCheckin = false;
-                            let bInvalid = false;
                             //set bBooked true if day is already booked to disable day button
                             for (var i = 0; i < stayBookings.length; i++) {
                                 let booking = stayBookings[i];
-                                if (isAfter(day, booking.check_in) && isBefore(day, booking.check_out)) {
-                                    bBooked = true;
-                                    break;
-                                }
+
+                                
                                 //check in day of other booking. Thus only available for picking checkout.
-                                if (isEqual(day, booking.check_in)) {
+                                if (isSameDay(day, booking.check_in)) {
                                     bBookCheckin = true;
                                     break;
                                 }
 
+                                if (isWithinInterval(day, { start: booking.check_in, end: booking.check_out })) {
+                                    bBooked = true;
+                                    break;
+                                }
+
                             }
+
+                            let bDisabled = false;
+                            bDisabled = (((((isBefore(day, today) || (isBefore(day, checkIn) || isEqual(day, checkIn)) || (isAfter(day, firstBookedDayAfterCheckin))) && (pickDate === 'checkout')))) || (bBooked) || ((bBookCheckin) && (pickDate === 'checkin')));
 
                             return (
                                 <div
@@ -338,7 +353,7 @@ function DateSelect(props) {
                                 <button
                                     type="button"
                                     onClick={() => handleDaySelect(day)}
-                                    onMouseOver={() => handleHoverSelect(day)}
+                                    onMouseOver={() => {if (bDisabled === false) {handleHoverSelect(day, bBooked, bBookCheckin)}}}
                                     className={classNames(
 
                                         //gray out all days before today
@@ -385,7 +400,7 @@ function DateSelect(props) {
                                     // if checkout is already selected disable all days before the first booked day before checkout
                                     //this is to prevent bookings on top of other bookings
 
-                                    disabled={(((isBefore(day, today) || ((isBefore(day, checkIn) || isEqual(day, checkIn)) || (isAfter(day, firstBookedDayAfterCheckin))) && (pickDate === 'checkout')))) || (bBooked) || ((bBookCheckin) && (pickDate === 'checkin')) }
+                                    disabled={bDisabled}
                                 >
                                     <time dateTime={format(day, 'yyyy-MM-dd')}>
                                     {format(day, 'd')}
@@ -502,7 +517,7 @@ function DateSelect(props) {
                         
                         
                         <div className='overflow-hidden rounded-t-xl '>
-                            <Slideshow photos={props.photos}/>
+                            <Slideshow photos={props.photos} aspect='3/2' delay={3500}/>
                         </div>
                             
                         <div className='pr-8'>
@@ -522,7 +537,7 @@ function DateSelect(props) {
 
                             <BookingInfo text="What's included"/>
 
-                            <BookingInfo text="You need to bring"/>
+                            <BookingInfo text="Not Included"/>
 
                             <BookingInfo text="Directions"/>
 
@@ -534,8 +549,8 @@ function DateSelect(props) {
 
                     <div className='min-h-fit w-full lg:w-[30%] lg:ml-8 lg:mr-0 mx-4 mt-6 lg:mb-3 lg:mt-0 inline-block rounded-xl bg-gray-50 shadow-md shadow-gray-200'>
                         <img
-                            className=' aspect-auto w-full rounded-t-xl' 
-                            src="images/farm-generic/farm.jpg" 
+                            className='hidden lg:block aspect-[3/2] w-full rounded-t-xl' 
+                            src="images/generic/farm.jpg" 
                             alt='mountain photo'
                         />
                         

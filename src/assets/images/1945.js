@@ -81,19 +81,15 @@ const forty_images = [
     },
     {
         id: 22,
-        image: 'images/oudehu2s/20.jpg',
+        image: 'images/1945/22.jpg',
     },
     {
         id: 23,
-        image: 'images/oudehu3s/20.jpg',
+        image: 'images/1945/23.jpg',
     },
     {
         id: 24,
-        image: 'images/oudehu4s/20.jpg',
-    },
-    {
-        id: 25,
-        image: 'images/oudehu5s/20.jpg',
+        image: 'images/1945/24.jpg',
     },
     
 ]

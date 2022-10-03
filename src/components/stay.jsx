@@ -11,7 +11,7 @@ function Stay(props) {
                 <div className='inline-block w-full relative'>
                     <h2 className='m-5 text-4xl font-mono font-semibold'>{props.title}</h2>
                     <a
-                        exact="true" href={`/${props.title}`} 
+                        exact="true" href='/book'
                         className="z-40 border rounded-md h-fit w-fit py-2 px-4 absolute 
                         top-0 right-0 m-4 border-blue-400 text-blue-400 hover:bg-blue-400
                         hover:text-white text-xl"
@@ -29,6 +29,13 @@ function Stay(props) {
                         </li>
                     ) }
                 </ul>
+
+                <a
+                    exact="true" href={`/${props.title.toLowerCase()}`}
+                    className="text-blue-400 hover:text-blue-600 text-xl"
+                >
+                    Read more...
+                </a>
             </div>   
         )
     }
@@ -40,7 +47,11 @@ function Stay(props) {
         return(
             <div className='w-screen  border-t border-gray-400 flex flex-col lg:flex-row'>
                 <div className='lg:w-1/2 w-full'>
-                    <Slideshow className='top-0 h-full' photos={props.photos} />
+                    <img
+                        className='aspect-[3/2] w-full h-full object-cover' 
+                        src={props.image} 
+                        alt={props.title}
+                    />
                 </div>
                 <InfoBlock/>
             </div>
@@ -51,7 +62,11 @@ function Stay(props) {
             <div className='w-screen  border-t border-gray-400 flex flex-col lg:flex-row'>
                 <InfoBlock />
                 <div className='lg:w-1/2 w-full'>
-                    <Slideshow className='top-0 h-full' photos={props.photos} />
+                    <img
+                        className='aspect-[3/2] w-full h-full object-cover' 
+                        src={props.image} 
+                        alt={props.title}
+                    />
                 </div>
             </div>
         )

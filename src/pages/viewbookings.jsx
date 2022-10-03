@@ -36,10 +36,7 @@ function Viewbookings() {
         async function getBookings() {
             // axios request gets array of all users, then loop through returned array to find username(email) entered
             const response = await api.get(`findbookings/${loggedUser.username}`)
-            console.log(response.data.bookings);
             bookings = (response.data.bookings);
-            console.log(bookings)
-            // return(bookings)
         }
 
         getBookings()
@@ -58,9 +55,6 @@ function Viewbookings() {
                     bookingHeader.innerHTML = bookings[i].stay;
                     bookingHeader.className = 'm-1 ml-4 text-2xl font-bold ';
                     newBooking.appendChild(bookingHeader) 
-                    
-                    const bookingDates = document.createElement('div');
-                    newBooking.appendChild(bookingDates)
 
                     const bookingCheckIn = document.createElement('div');
                     bookingCheckIn.innerHTML = `Check In: ${bookings[i].checkin}`;

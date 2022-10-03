@@ -20,6 +20,10 @@ import Viewbookings from "./pages/viewbookings";
 import Thanks from "./pages/thanks";
 import NoMatch from "./pages/noMatch";
 import swartskaap_images from "./assets/images/swartskaap";
+import forty_images from "./assets/images/1945";
+import { info_forty } from "./assets/data/1945";
+import oudehuis_images from "./assets/images/oudehuis";
+import { info_oudehuis } from "./assets/data/oudehuis";
 
 
 export const userAtom = atomWithStorage('loggedUser', 'none');
@@ -48,6 +52,8 @@ function App() {
 					<Route exact path="/activities" element={<Activities />} />
 					<Route exact path="/book" element={<StaySelect />} className='z-50'/>
 					<Route exact path="/Swartskaap" element={<DateSelect name='Swartskaap' photos={swartskaap_images} info={info_swartskaap}/>} />
+					<Route exact path="/1945" element={<DateSelect name='1945' photos={forty_images} info={info_forty}/>} />
+					<Route exact path="/Oudehuiskloof" element={<DateSelect name='Oudehuiskloof' photos={oudehuis_images} info={info_oudehuis}/>} />
 					<Route exact path="/checkout" element={<Checkout />} />
 					<Route exact path="/viewbookings" element={<Viewbookings />} />
 					<Route  exact path="/thanks" element={<Thanks />} />

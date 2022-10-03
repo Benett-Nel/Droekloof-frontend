@@ -8,7 +8,6 @@ import { activities } from "../assets/data/activities";
 import { useAtom } from 'jotai';
 import { navMenuAtom, profileMenuAtom } from "../App";
 import useWindowDimensions from "../functions/windowsize";
-import swartskaap_images from "../assets/images/swartskaap";
 
 function Activity(props) {
 
@@ -22,7 +21,7 @@ function Activity(props) {
 
                 {/* image block */} 
                 <div className="lg:w-1/2 w-full">
-                    <Slideshow photos={swartskaap_images} title={props.activity.title}/>
+                    <Slideshow photos={props.activity.images} title={props.activity.title}/>
                 </div>
 
                 {/* info block */}
@@ -46,7 +45,7 @@ function Activity(props) {
 
                 {/* image block */} 
                 <div className="lg:w-1/2 w-full">
-                    <Slideshow photos={swartskaap_images} title={props.activity.title}/>
+                    <Slideshow photos={props.activity.images} title={props.activity.title} delay={3000}/>
                 </div>
             </div>
         )
@@ -62,8 +61,6 @@ function Activities() {
     window.onload = function() {
         /* Set style classes to enable background blur when activity page is rendered*/
         document.getElementById('navbar').className = 'lg:backdrop-blur-sm backdrop-blur-none h-16 z-20 flex  justify-between flex-wrap bg-inherit px-6';
-        /* prevent backdrop blur from title div that causes backdrop blur on home page for stays */
-        document.getElementById('title_div').className = 'invisible'
     }
 
     return (

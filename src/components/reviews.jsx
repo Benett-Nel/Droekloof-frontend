@@ -102,9 +102,15 @@ function Reviews() {
         
         event.preventDefault();
 
+        const rating = event.target.rating.value;
+
+        if (rating === '0') {
+            alert('Please select a rating');
+            return;
+        }
+
         const stay = event.target.stay.value;
         const comment = event.target.comment.value;
-        const rating = event.target.rating.value;
 
         if (typeof loggedUser !== 'string') {
             // @ts-ignore

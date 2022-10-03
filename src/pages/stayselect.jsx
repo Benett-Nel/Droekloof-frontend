@@ -29,7 +29,7 @@ function StaySummary(props) {
                 </a>
             </div>
             
-            <Slideshow photos={props.photos}/>
+            <Slideshow photos={props.photos} aspect='3/2' delay={1000000}/>
             <div>
                 <ul className='text-black list-disc ml-10 font-mono text-lg'>
                     { props.info.info_list.map((line, index) =>

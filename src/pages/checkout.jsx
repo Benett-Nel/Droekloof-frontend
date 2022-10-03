@@ -42,7 +42,7 @@ function Checkout() {
         // Create a new dropin form instance
         var inline = sdk.inline({
             layout: 'basic',
-            amountInCents: 2499,
+            amountInCents: bookingInfo.cost * 100,
             currency: 'ZAR'
         });
         console.log(inline)
@@ -71,7 +71,6 @@ function Checkout() {
                     errorMessage && alert("error occured: " + errorMessage);
                 } else {
                     const token = result;
-                    alert("card successfully tokenised: " + token.id);
 
                     // submit charge token to my own backend if it was succesful
                     const api = axios.create({
@@ -79,13 +78,14 @@ function Checkout() {
                     })
 
                     console.log(bookingInfo.checkIn)
+                    console.log(bookingInfo.cost)
                     const response =  await api.get('/pay/', { params:
                             {token: token.id,
                             username: loggedUser.username,
                             stay_name: bookingInfo.stay,
                             checkIn: bookingInfo.checkIn,
                             checkOut: bookingInfo.checkOut,
-                            total_cost: bookingInfo.cost,
+                            total_cost: bookingInfo.cost * 100,
                             num_guests: bookingInfo.people,
                             num_rooms: bookingInfo.rooms,}
                         }
@@ -97,7 +97,7 @@ function Checkout() {
                         window.location.assign("/thanks");
                     } else {
                         alert("Error in Processing Payment. The transaction did not go through, check card info is correct or contact us for support.")
-                        window.location.assign('/book/checkout')
+                        window.location.assign('/checkout')
                     }
                 }
             }).catch(function (error) {
@@ -145,7 +145,7 @@ function Checkout() {
                     {/* large Portrait photo, height of screen */}
                     <img
                         className='aspect-video h-full w-full ' 
-                        src='images/farm-generic/farm.jpg' 
+                        src='images/portrait.jpg' 
                         alt='mountain photo'
                     />
                 </div>

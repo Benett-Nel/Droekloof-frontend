@@ -2,8 +2,7 @@
 import React from 'react'
 import { Parallax, ParallaxLayer } from '@react-spring/parallax';
 import { useState } from 'react';
-import Slideshow from '../components/carousel';
-import swartskaap_images from '../assets/images/swartskaap';
+import generic_images from '../assets/images/generic';
 import axios from 'axios';
  
 import { useAtom } from 'jotai';
@@ -88,9 +87,13 @@ function Signup(props) {
                         first_name: first_name,
                         last_name: last_name, }
                     )
-                    console.log(new_user);
+                    
                     // log user in and confirm booking
-                    setLoggedUser(new_user);
+                    setLoggedUser({
+                        username: email,
+                        first_name: first_name,
+                        last_name: last_name, 
+                    });
                     
                     if (props.loginReason === 'create') {
                         window.location.assign("/book/checkout");
@@ -130,7 +133,7 @@ function Signup(props) {
                 >
                     <img
                         className='aspect-video h-full w-full' 
-                        src={swartskaap_images[1]} 
+                        src={generic_images[0].image} 
                         alt='mountain photo'
                     />
                 </div>

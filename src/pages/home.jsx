@@ -18,6 +18,8 @@ import swartskaap_images from "../assets/images/swartskaap";
 import oudehuis_images from "../assets/images/oudehuis";
 import forty_images from "../assets/images/1945";
 import generic_images from "../assets/images/generic";
+import { info_oudehuis } from "../assets/data/oudehuis";
+import { info_forty } from "../assets/data/1945";
 
 
 function Home () {
@@ -26,6 +28,10 @@ function Home () {
 	// use it in the app route so that any click outside of the Navbar component will make menu dissapear
 	const [profileMenuPopup, setProfileMenuPopup] = useAtom(profileMenuAtom);
     const [navMenuPopup, setNavMenuPopup] = useAtom(navMenuAtom);
+
+    const swartskaap_cover = swartskaap_images[0].image;
+    const oudehuis_cover = oudehuis_images[0].image;
+    const forty_cover = forty_images[0].image;
 
     function handleResize() {
         const newWindowSize = {width: window.innerWidth, height: window.innerHeight};
@@ -38,7 +44,7 @@ function Home () {
 
     window.addEventListener('resize', handleResize);
 
-    const windowRatio = ((windowSize.width / windowSize.height)  * (2/3)) - 0.1;
+    const windowRatio = ((windowSize.width / windowSize.height)  * (9/16)) - 0.1;
 
     return (
 
@@ -60,7 +66,7 @@ function Home () {
                 className="snap-start"
             >
                 <div className="top-0 lg:h-screen flex flex-wrap  w-screen ">
-                    <Slideshow title='Droëkloof' photos={generic_images}/>
+                    <Slideshow title='Droëkloof' photos={generic_images} aspect='16/9' delay={3500}/>
                 </div>
             </ParallaxLayer>
                 
@@ -76,13 +82,13 @@ function Home () {
                 >
                 <div className="h-[10%]"></div>
                 {/* swartskaap */}
-                <Stay info={info_swartskaap.info_list} title='Swartskaap' photos={swartskaap_images} side="left"/>
+                <Stay info={info_swartskaap.info_list} title='Swartskaap' image={swartskaap_cover} side="left" />
 
                 {/* swartskaap */}
-                <Stay info={info_swartskaap.info_list} title='1945' photos={forty_images} side="right"/>
+                <Stay info={info_forty.info_list} title='1945' image={forty_cover} side="right" />
 
                 {/* swartskaap */}
-                <Stay info={info_swartskaap.info_list} title='Oudehuiskloof' photos={oudehuis_images} side="left"/>
+                <Stay info={info_oudehuis.info_list} title='Oudehuiskloof' image={oudehuis_cover} side="left" />
 
                 <Reviews />
 
